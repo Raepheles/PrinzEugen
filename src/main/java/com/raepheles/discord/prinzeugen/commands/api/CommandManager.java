@@ -4,11 +4,13 @@ import com.raepheles.discord.prinzeugen.Messages;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.User;
+import discord4j.core.object.util.Permission;
 import org.reflections.Reflections;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.awt.*;
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -18,16 +20,25 @@ public class CommandManager {
     private String defaultPrefix;
     private Map<Guild, String> guildPrefixes;
 
-    public CommandManager(String packageName, String defaultPrefix) {
+    public CommandManager(String packageName, String defaultPrefix) throws CommandParsingException {
         Reflections r = new Reflections(packageName);
+        List<String> commandKeywords = new ArrayList<>();
         commands = r.getSubTypesOf(Command.class).stream().filter(c -> !c.isAnonymousClass()).map(c -> {
             try {
-                return c.getDeclaredConstructor().newInstance();
-            } catch (Exception e) {
+                Command cmd = c.getDeclaredConstructor().newInstance();
+                commandKeywords.add(cmd.getKeyword());
+                return cmd;
+            } catch (NoSuchMethodException | InstantiationException | InvocationTargetException | IllegalAccessException e) {
                 e.printStackTrace();
             }
             return null;
         }).filter(Objects::nonNull).collect(Collectors.toList());
+
+        Set<String> commandKeywordsSet = new HashSet<>(commandKeywords);
+        if (commandKeywordsSet.size() < commandKeywords.size()) {
+            throw new CommandParsingException("Command keywords must be unique." +
+                " You cannot have two commands with the same keyword!");
+        }
 
         commands.add(getHelpCommand());
 
@@ -84,11 +95,26 @@ public class CommandManager {
                                     embedCreateSpec.setTitle("Prinz Eugen");
                                 })))))
                     .switchIfEmpty(Flux.fromIterable(commands)
-                        .filter(c -> c.getKeyword().equalsIgnoreCase(this.getParametersAsString()))
+                        .filter(c -> c.getKeyword().equalsIgnoreCase(this.getParametersAsString()) || c.getAliases().contains(this.getParametersAsString().toLowerCase()))
                         .next()
                         .flatMap(command -> Mono.just(command)
                             .flatMap(channel -> event.getMessage().getChannel())
-                            .flatMap(channel -> channel.createMessage(command.getHelpMessage()))))
+                            .flatMap(channel -> channel.createEmbed(embedCreateSpec -> {
+                                embedCreateSpec.setTitle("Command: " + command.getKeyword());
+                                embedCreateSpec.setColor(Color.red);
+                                embedCreateSpec.addField("Description", command.getDescription(), false);
+                                embedCreateSpec.addField("Usage", command.getUsage(), false);
+                                if (!command.getAliases().isEmpty()) embedCreateSpec.addField("Aliases",
+                                    String.join(", ", command.getAliases()),
+                                    false);
+                                if (!command.getAcceptedFlags().isEmpty()) embedCreateSpec.addField("Flags",
+                                    command.getAcceptedFlags().stream().map(Flag::getFlagName).collect(Collectors.joining(", ")),
+                                    false);
+                                if (!command.getRequiredPerms().isEmpty())
+                                    embedCreateSpec.addField("Required Permissions",
+                                        command.getRequiredPerms().stream().map(Permission::name).collect(Collectors.joining(", ")),
+                                        false);
+                            }))))
                     .doOnError(e -> e.printStackTrace())
                     .then();
             }

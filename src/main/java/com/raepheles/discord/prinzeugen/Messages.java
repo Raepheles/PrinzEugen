@@ -24,8 +24,8 @@ public class Messages {
     }
 
     public static String getHelpMessage(String prefix) {
-        return String.format("Use `%shelp [command-name]` for further help on the command.\n" +
-                "Example: %shelp help", prefix, prefix);
+        return String.format("Use `%shelp [command-name]` for further help on the command. " +
+            "Example: `%shelp help`", prefix, prefix);
     }
 
     public static String getLogMessage(String commandName, String userName, String userId, String guildName, String guildId, String channelName) {

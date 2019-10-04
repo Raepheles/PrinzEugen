@@ -8,7 +8,6 @@ import reactor.core.publisher.Mono;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 public abstract class Command {
@@ -146,15 +145,6 @@ public abstract class Command {
 
     public void setUsage(String usage) {
         this.usage = usage;
-    }
-
-    public String getHelpMessage() {
-        StringJoiner sj = new StringJoiner("\n");
-        sj.add(description);
-        sj.add("Usage: " + usage);
-        if(!acceptedFlags.isEmpty()) sj.add("Flags: " + this.acceptedFlags.stream().map(Flag::getFlagName).collect(Collectors.joining(", ")));
-        if(!requiredPerms.isEmpty()) sj.add("Required Perms: " + this.requiredPerms);
-        return sj.toString();
     }
 
     public List<Permission> getRequiredPerms() {

@@ -28,4 +28,8 @@ public class Utilities {
         }
         return new Color(0);
     }
+
+    public static String urlEncode(String text) {
+        return text.replaceAll(" ", "_");
+    }
 }

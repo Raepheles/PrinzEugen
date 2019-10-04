@@ -2,6 +2,7 @@ package com.raepheles.discord.prinzeugen;
 
 import com.raepheles.discord.prinzeugen.commands.api.CommandDispatcher;
 import com.raepheles.discord.prinzeugen.commands.api.CommandManager;
+import com.raepheles.discord.prinzeugen.commands.api.CommandParsingException;
 import discord4j.core.DiscordClient;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.event.domain.message.MessageCreateEvent;
@@ -26,7 +27,13 @@ public class Bot {
         String token = readFromTextFile("token.txt");
 
         final DiscordClient client = new DiscordClientBuilder(token).build();
-        final CommandManager manager = new CommandManager("com.raepheles.discord.prinzeugen.commands", "!");
+        final CommandManager manager;
+        try {
+            manager = new CommandManager("com.raepheles.discord.prinzeugen.commands", "!");
+        } catch (CommandParsingException e) {
+            e.printStackTrace();
+            return;
+        }
         final CommandDispatcher dispatcher = new CommandDispatcher(manager);
 
         ships = new ArrayList<>();

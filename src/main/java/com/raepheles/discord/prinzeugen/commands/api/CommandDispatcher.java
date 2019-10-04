@@ -45,24 +45,24 @@ public class CommandDispatcher {
                     }
                     final String finalUserName = userName;
                     final String finalUserId = userId;
+                    final String finalCommandText = String.join(" ", command.getKeyword(), command.getParametersAsString()).trim();
                     GuildChannel gChannel = (GuildChannel)msgChannel;
                     if(error == null) {
                         return event.getGuild()
-                            .flatMap(guild -> messageChannel.createMessage(Messages.getLogMessage(command.getKeyword(), finalUserName,
+                            .flatMap(guild -> messageChannel.createMessage(Messages.getLogMessage(finalCommandText, finalUserName,
                                 finalUserId,
                                 guild.getName(),
                                 guild.getId().asString(),
                                 gChannel.getName())));
                     } else {
                         return event.getGuild()
-                            .flatMap(guild -> messageChannel.createMessage(Messages.getLogMessage(command.getKeyword(), finalUserName,
+                            .flatMap(guild -> messageChannel.createMessage(Messages.getLogMessage(finalCommandText, finalUserName,
                                 finalUserId,
                                 guild.getName(),
                                 guild.getId().asString(),
                                 gChannel.getName(),
                                 error)));
                     }
-
                 }))
             .then();
     }

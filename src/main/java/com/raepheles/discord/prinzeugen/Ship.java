@@ -17,6 +17,9 @@ public class Ship {
     private String constructionTime;
     private String skills;
     private String misc;
+    private String constructionInfo;
+    private String dropInfo;
+    private String additionalDropInfo;
     private Ship retrofit;
 
     private String image;
@@ -40,6 +43,9 @@ public class Ship {
                  String image,
                  String chibi,
                  String icon,
+                 String constructionInfo,
+                 String dropInfo,
+                 String additionalDropInfo,
                  Map<String, String> skins,
                  Map<String, String> chibiSkins,
                  Map<String, Map<String, String>> stats) {
@@ -56,9 +62,46 @@ public class Ship {
         this.image = image;
         this.chibi = chibi;
         this.icon = icon;
+        this.constructionInfo = constructionInfo;
+        this.dropInfo = dropInfo;
+        this.additionalDropInfo = additionalDropInfo;
         this.skins = skins;
         this.chibiSkins = chibiSkins;
         this.stats = stats;
+    }
+
+    private Ship(Map<String, Map<String, String>> stats) {
+        this.name = null;
+        this.id = null;
+        this.type = null;
+        this.rarity = null;
+        this.nationality = null;
+        this.shipClass = null;
+        this.constructionTime = null;
+        this.skills = null;
+        this.misc = null;
+        this.retrofit = null;
+        this.image = null;
+        this.chibi = null;
+        this.icon = null;
+        this.constructionInfo = null;
+        this.dropInfo = null;
+        this.additionalDropInfo = null;
+        this.skins = null;
+        this.chibiSkins = null;
+        this.stats = stats;
+    }
+
+    public static Ship parseObjectToRetrofitShip(JSONObject obj) throws InvalidShipObjectException {
+        if (obj == null) {
+            throw new InvalidShipObjectException("Ship object is null.");
+        }
+        JSONObject stats = obj.optJSONObject("stats");
+        Map<String, Map<String, String>> statsMap = new HashMap<>();
+        for (String key : stats.keySet()) {
+            statsMap.put(key, jsonToMap(stats.getJSONObject(key)));
+        }
+        return new Ship(statsMap);
     }
 
     public static Ship parseObjectToShip(JSONObject obj) throws InvalidShipObjectException {
@@ -75,6 +118,7 @@ public class Ship {
         String skills = obj.optString("skills");
         String misc = obj.optString("misc");
         JSONObject imageObj = obj.optJSONObject("images");
+        JSONObject constructionObj = obj.optJSONObject("construction");
         if(name == null) {
             throw new InvalidShipObjectException("Null name.");
         }
@@ -105,9 +149,15 @@ public class Ship {
         if(imageObj == null) {
             throw new InvalidShipObjectException("Null images object.");
         }
+        if (constructionObj == null) {
+            throw new InvalidShipObjectException("Null construction object.");
+        }
         String image = imageObj.optString("default");
         String chibi = imageObj.optString("chibi");
         String icon = imageObj.optString("icon");
+        String constructionInfo = constructionObj.optString("construction");
+        String dropInfo = constructionObj.optString("drop");
+        String additionalDropInfo = constructionObj.optString("additional");
         JSONArray skinsArray = imageObj.optJSONArray("skins");
         JSONArray chibisArray = imageObj.optJSONArray("chibis");
         if(image == null) {
@@ -118,6 +168,15 @@ public class Ship {
         }
         if(icon == null) {
             throw new InvalidShipObjectException("Null default icon image.");
+        }
+        if (constructionInfo == null) {
+            throw new InvalidShipObjectException("Null construction info text.");
+        }
+        if (dropInfo == null) {
+            throw new InvalidShipObjectException("Null drop info text.");
+        }
+        if (additionalDropInfo == null) {
+            throw new InvalidShipObjectException("Null additional drop info text.");
         }
         if(skinsArray == null) {
             throw new InvalidShipObjectException("Null skins array.");
@@ -142,7 +201,7 @@ public class Ship {
         if(retrofitObj == null) {
             retrofit = null;
         } else {
-            retrofit = parseObjectToShip(retrofitObj);
+            retrofit = parseObjectToRetrofitShip(retrofitObj);
         }
         JSONObject stats = obj.optJSONObject("stats");
         Map<String, Map<String, String>> statsMap = new HashMap<>();
@@ -151,7 +210,8 @@ public class Ship {
         }
 
         return new Ship(name, id, type, rarity, nationality, shipClass, constructionTime,
-                skills, misc, retrofit, image, chibi, icon, skinsMap, chibisMap, statsMap);
+            skills, misc, retrofit, image, chibi, icon, constructionInfo, dropInfo,
+            additionalDropInfo, skinsMap, chibisMap, statsMap);
     }
 
     private static Map<String, String> jsonToMap(JSONObject o) {
@@ -220,6 +280,18 @@ public class Ship {
 
     public String getMisc() {
         return misc;
+    }
+
+    public String getConstructionInfo() {
+        return constructionInfo;
+    }
+
+    public String getDropInfo() {
+        return dropInfo;
+    }
+
+    public String getAdditionalDropInfo() {
+        return additionalDropInfo;
     }
 
     public Map<String, Map<String, String>> getStats() {

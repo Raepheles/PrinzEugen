@@ -19,9 +19,11 @@ public class ShipCommand extends Command {
         super("ship", "Game Info", true);
         Flag lv120 = new Flag("lv120", 1);
         Flag base = new Flag("base", 1);
-        this.addFlags(Arrays.asList(lv120, base));
+        Flag retrofit = new Flag("retrofit", 2);
+        this.addFlags(Arrays.asList(lv120, base, retrofit));
         this.setUsage("[prefix]ship [ship-name]");
-        this.setDescription("Shows ship data. By default displays level 100 stats. For base and level 120 stats use -base or -lv120 flags.");
+        this.setDescription("Shows ship data. By default displays level 100 stats. For base and level 120 stats" +
+            " use -base or -lv120 flags. For retrofit stats use -retrofit flag");
     }
 
     @Override
@@ -31,35 +33,47 @@ public class ShipCommand extends Command {
         return Flux.fromIterable(Bot.ships)
                 .filter(ship -> ship.getName().equalsIgnoreCase(parameter))
                 .flatMap(ship -> event.getMessage().getChannel()
-                    .flatMap(channel-> channel.createEmbed(embedCreateSpec -> {
-                        embedCreateSpec.setTitle(String.format("%s - %s", ship.getId(), ship.getName()));
-                        embedCreateSpec.setUrl(String.format("%s/%s", Utilities.WIKI_BASE_LINK,
-                                ship.getName().replaceAll(" ", "_")));
-                        embedCreateSpec.setColor(Utilities.getShipColorByRarity(ship.getRarity()));
-                        embedCreateSpec.setThumbnail(ship.getIcon());
-                        embedCreateSpec.addField("Class", ship.getShipClass(), true);
-                        embedCreateSpec.addField("Nationality", ship.getNationality(), true);
-                        embedCreateSpec.addField("Type", ship.getType(), true);
-                        embedCreateSpec.addField("Construction Time", ship.getConstructionTime(), true);
-                        String statsKey = "lv100";
-                        if(this.flagExists("base")) {
-                            statsKey = "base";
-                        } else if(this.flagExists("lv120")) {
-                            statsKey = "lv120";
+                    .flatMap(channel -> {
+                        if (this.flagExists("retrofit")
+                            && !ship.getRetrofit().isPresent()) {
+                            return channel.createMessage(String.format("%s doesn't have retrofit", ship.getName()));
                         }
-                        String[] stats = splitStats(ship, statsKey);
-                        embedCreateSpec.addField("Stats", stats[0], true);
-                        embedCreateSpec.addField("Stats", stats[1], true);
-                        embedCreateSpec.addField("Skills", ship.getSkills(), true);
-                        embedCreateSpec.addField("Misc", ship.getMisc(), true);
-                    })))
+                        return channel.createEmbed(embedCreateSpec -> {
+                            embedCreateSpec.setTitle(String.format("%s - %s", ship.getId(), ship.getName()));
+                            embedCreateSpec.setUrl(String.format("%s/%s", Utilities.WIKI_BASE_LINK,
+                                Utilities.urlEncode(ship.getName())));
+                            embedCreateSpec.setColor(Utilities.getShipColorByRarity(ship.getRarity()));
+                            embedCreateSpec.setThumbnail(ship.getIcon());
+                            embedCreateSpec.addField("Class", ship.getShipClass(), true);
+                            embedCreateSpec.addField("Nationality", ship.getNationality(), true);
+                            embedCreateSpec.addField("Type", ship.getType(), true);
+                            embedCreateSpec.addField("Construction Time", ship.getConstructionTime(), true);
+                            String statsKey = "lv100";
+                            if (this.flagExists("base")) {
+                                statsKey = "base";
+                            } else if (this.flagExists("lv120")) {
+                                statsKey = "lv120";
+                            }
+                            boolean retrofit = this.flagExists("retrofit");
+                            String[] stats = splitStats(ship, statsKey, retrofit);
+                            embedCreateSpec.addField("Stats", stats[0], true);
+                            embedCreateSpec.addField("Stats", stats[1], true);
+                            embedCreateSpec.addField("Skills", ship.getSkills(), true);
+                            embedCreateSpec.addField("Misc", ship.getMisc(), true);
+                        });
+                    }))
                 .switchIfEmpty(event.getMessage().getChannel()
                     .flatMap(channel -> channel.createMessage("Ship not found.")))
                 .then();
     }
 
-    private String[] splitStats(Ship ship, String key) {
-        Map<String, String> stats = ship.getStats().get(key);
+    private String[] splitStats(Ship ship, String key, boolean retrofit) {
+        Map<String, String> stats;
+        if (retrofit && ship.getRetrofit().isPresent()) {
+            stats = ship.getRetrofit().get().getStats().get(key);
+        } else {
+            stats = ship.getStats().get(key);
+        }
         String[] res = new String[2];
         StringJoiner sj = new StringJoiner("\n");
         int max = stats.keySet().size() / 2;

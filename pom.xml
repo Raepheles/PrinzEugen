@@ -6,7 +6,7 @@
 
     <groupId>com.raepheles.discord</groupId>
     <artifactId>prinzeugen</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0</version>
     <properties>
         <jdk.version>1.8</jdk.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
