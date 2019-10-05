@@ -69,19 +69,16 @@ public class ImageCommand extends Command {
                                     }
                                     skinUrl = map.get(idToSkinKey.get(skinNum));
                                     final String skin = skinUrl;
-                                    return message.removeAllReactions()
-                                        .then(message.edit(messageEditSpec -> {
-                                            messageEditSpec.setContent("");
-                                            messageEditSpec.setEmbed(embedCreateSpec -> {
-                                                embedCreateSpec.setTitle(String.format("%s - %s", ship.getId(), ship.getName()));
-                                                embedCreateSpec.setUrl(skin);
-                                                embedCreateSpec.setImage(skin);
-                                                if(event.getMessage().getAuthor().isPresent()) {
-                                                    User author = event.getMessage().getAuthor().get();
-                                                    embedCreateSpec.setFooter("Requested by " +
-                                                        author.getUsername() + "#" + author.getDiscriminator(), null);
-                                                }
-                                            });
+                                    return message.delete()
+                                        .then(channel.createEmbed(embedCreateSpec -> {
+                                            embedCreateSpec.setTitle(String.format("%s - %s", ship.getId(), ship.getName()));
+                                            embedCreateSpec.setUrl(skin);
+                                            embedCreateSpec.setImage(skin);
+                                            if(event.getMessage().getAuthor().isPresent()) {
+                                                User author = event.getMessage().getAuthor().get();
+                                                embedCreateSpec.setFooter("Requested by " +
+                                                    author.getUsername() + "#" + author.getDiscriminator(), null);
+                                            }
                                         }));
                                 })
                                 .timeout(Duration.ofSeconds(20))
