@@ -51,7 +51,7 @@ public abstract class Command {
     }
 
     Mono<Boolean> preExecute(MessageCreateEvent event) {
-        String msg = event.getMessage().getContent().get();
+        String msg = event.getMessage().getContent().get().trim();
 
         String[] split = msg.split(" ");
         List<String> parameters = new ArrayList<>();

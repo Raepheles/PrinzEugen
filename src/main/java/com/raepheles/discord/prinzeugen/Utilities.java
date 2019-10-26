@@ -30,6 +30,7 @@ public class Utilities {
     }
 
     public static String urlEncode(String text) {
-        return text.replaceAll(" ", "_");
+        return text.replaceAll(" ", "_")
+            .replaceAll("ö", "%C3%B6");
     }
 }
