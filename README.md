@@ -1,0 +1,3 @@
+# PrinzEugen
+
+This is a very old discord bot project for the mobile game Azur Lane that I used to privately host. I've only made it open source in case people would like to see its code. I've developed this project to learn more about reactive patterns in Java. Later on I've rewritten this project in typescript (you can see that project [here](https://github.com/Raepheles/PrinzEugenBot)). I gave it a quick look and as long as you create a `token.txt` file in the root directory and write your bot's token in there it should work fine. Although note that there has been a lot of big changes in the core discord api which might have broken certain features used here.
